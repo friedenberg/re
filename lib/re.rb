@@ -1,20 +1,29 @@
+require "re/utility"
 require "re/version"
-require "re/validation"
 require "re/options"
+require "re/graph"
+require "re/graph_putter"
 
 module Re
   class << self
-    def run(arg, exec_type = ::Options::ExecType::MODULE)
-      case exec_type
-      end
-
-      unless Validation::which(arg.first)
-        puts "unknown command: #{arg.first}"
+    def run(args, input_stream = STDIN, exec_type = Options::ExecType::MODULE)
+      begin
+        options = Options.new(args)
+      rescue ArgumentError => e
+        puts e
         exit(1)
       end
 
-      Open3.popen3(arg) do |i,o,e,w|
-        puts o.read.chomp
+      putter = TabGraphPutter.new(options, STDOUT)
+
+      visitor = Graph::Visitor.new(
+        options,
+        input_stream,
+      )
+
+
+      lobby_nodes = visitor.traverse do |node|
+        putter.print_node(node)
       end
     end
   end
