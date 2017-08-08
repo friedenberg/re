@@ -41,6 +41,11 @@ module Re
       @path = self.class.which(@name)
 
       if @path.to_s.empty?
+        File.executable? @name
+        @path = File.absolute_path(@name)
+      end
+
+      if @path.to_s.empty?
         raise ArgumentError.new("Command #{@name} could not be found in PATH")
       end
     end
