@@ -33,32 +33,16 @@ module Re
 
         def add_to_enum(y)
           y << self
-          add_children_to_enum(y)
-        end
-
-        def add_children_to_enum(y)
-          child_enumerator = children.each
-
-          while child = child_enumerator.next
-            begin
-              y << child.add_to_enum(y)
-              child_enumerator.peek
-            rescue StopIteration => e
-              if status == Status::VISIT_IN_PROGRESS
-                'node waiting'
-                next
-              else
-                'node complete'
-                break
-              end
-            end
+          children.each do |child|
+            child.add_to_enum(y)
           end
         end
 
-        def each
-          Enumerator.new do |y|
-            add_to_enum(y)
-          end
+        def each(&block)
+          return enum_for(:each) unless block_given?
+
+          block.call(self)
+          children.each {|c| c.each(&block)}
         end
       end
 
