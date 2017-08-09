@@ -40,8 +40,7 @@ module Re
       @name = @command.shellsplit.first
       @path = self.class.which(@name)
 
-      if @path.to_s.empty?
-        File.executable? @name
+      if @path.to_s.empty? and File.executable? @name
         @path = File.absolute_path(@name)
       end
 
