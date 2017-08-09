@@ -24,6 +24,8 @@ module Re
       lobby_nodes = visitor.traverse do |node|
         putter.print_node(node)
       end
+
+      lobby_nodes
     end
   end
 end

@@ -90,6 +90,8 @@ module Re
           node = Node.new(line)
           @lobby_nodes << visit_node(node, &block)
         end
+
+        @lobby_nodes
       end
 
       def visit_node(node, depth = 0, &block)
