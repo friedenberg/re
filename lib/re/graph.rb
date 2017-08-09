@@ -104,6 +104,7 @@ module Re
           end
 
           if @visited.add?(child.raw_arg).nil?
+            #todo somehow mark as having a cycle
             next
           end
 
