@@ -22,16 +22,12 @@ module Re
       let(:command) {'cat'}
 
       it { expect(subject.name).to eq 'cat' }
-      it { expect(subject.args).to eq [] }
-      it { expect(subject.components).to eq %w'cat' }
     end
 
     context 'array of strings: ls -a' do
       let(:command) {['ls', '-a', '-r']}
 
       it { expect(subject.name).to eq 'ls' }
-      it { expect(subject.args).to eq %w'-a -r' }
-      it { expect(subject.components).to eq %w'ls -a -r' }
     end
 
     describe '#command' do
