@@ -21,9 +21,17 @@ module Re
         input_stream,
       )
 
-      lobby_nodes = visitor.traverse do |node|
-        putter.print_node(node)
+      lobby_nodes = visitor.traverse
+
+      print_thread = Thread.new do
+        lobby_nodes.each do |root_node|
+          root_node.each do |node|
+            putter.print_node(node)
+          end
+        end
       end
+
+      print_thread.join
 
       lobby_nodes
     end

@@ -22,6 +22,9 @@ module Re
 
         arg = arg.chomp
 
+        @visit_mutex = Mutex.new
+        @visit_cond = ConditionVariable.new
+
         super(
           Status::UNVISITED,
           [],
@@ -30,19 +33,33 @@ module Re
           arg,
           depth,
         )
+      end
 
-        def add_to_enum(y)
-          y << self
-          children.each do |child|
-            child.add_to_enum(y)
+      def status=(new_status)
+        retval = super(new_status)
+
+        if self.visited?
+          @visit_mutex.synchronize do
+            @visit_cond.signal
           end
         end
 
-        def each(&block)
-          return enum_for(:each) unless block_given?
+        retval
+      end
 
-          block.call(self)
-          children.each {|c| c.each(&block)}
+      def each(blocking_until_visited: false, &block)
+        return enum_for(:each) unless block_given?
+
+        block.call(self)
+
+        @visit_mutex.synchronize do
+          if blocking_until_visited
+            @visit_cond.wait @visit_mutex
+          elsif not visited?
+            raise ThreadError, "node incomplete"
+          end
+
+          children.each {|c| c.each(blocking_until_visited: blocking_until_visited, &block)}
         end
       end
 
@@ -54,7 +71,7 @@ module Re
       end
 
       def visited?
-        [Status::VISIT_SUCCEEDED, Status::VISIT_FAILED].contains?(self.status)
+        [Status::VISIT_SUCCEEDED, Status::VISIT_FAILED].include?(self.status)
       end
     end
 
