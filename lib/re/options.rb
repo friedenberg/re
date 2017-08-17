@@ -8,15 +8,39 @@ module Re
       EXECUTABLE          = 2
     end
 
-    attr_reader :utility, :transform, :replacement, :max_depth, :raw_output
+    attr_reader(
+      :utility,
+      :transform,
+      :replacement,
+      :max_depth,
+      :raw_output,
+      :worker_thread_count,
+    )
 
     def initialize(args)
-      @max_depth = 0
+      @max_depth = 5
+      @worker_thread_count = 4
       @raw_output = false
 
       parser = OptionParser.new do |parser|
         parser.accept(Utility) do |arg|
           Utility.new(arg)
+        end
+
+        parser.on(
+          '-v',
+          '--verbose',
+        ) do
+          $verbose = true
+        end
+
+        parser.on(
+          '-P',
+          '--max-procs PROCESS_COUNT',
+          Integer,
+          'PROCESS_COUNT to allow for invocations of the passed in utility. Defaults to 4.',
+        ) do |count|
+          @worker_thread_count = count
         end
 
         parser.on(

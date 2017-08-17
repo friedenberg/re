@@ -14,24 +14,13 @@ module Re
         exit(1)
       end
 
+      visitor = Graph::Visitor.new(options, input_stream)
       putter = TabGraphPutter.new(options, output_stream)
 
-      visitor = Graph::Visitor.new(
-        options,
-        input_stream,
-      )
-
-      lobby_nodes = visitor.traverse
-
-      print_thread = Thread.new do
-        lobby_nodes.each do |root_node|
-          root_node.each do |node|
-            putter.print_node(node)
-          end
-        end
+      lobby_nodes = visitor.traverse do |node|
+        putter.print_node(node)
       end
 
-      print_thread.join
 
       lobby_nodes
     end

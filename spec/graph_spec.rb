@@ -1,10 +1,9 @@
 require 'spec_helper'
 
-module Re::Graph
-  describe Re::Graph do
-  end
+include SpecHelper
 
-  describe Re::Graph::Node do
+module Re::Graph
+  describe Node do
     it 'cannot be initialized with nil arguments' do
       expect { Node.new(nil) }.to raise_error(ArgumentError)
     end
@@ -42,71 +41,153 @@ module Re::Graph
     end
 
     describe '#each' do
-      context 'without a block' do
-        it 'returns an enumerator' do
-          actual = Node.new('first').each
-          expect(actual).to be_a_kind_of(Enumerator)
-        end
+      let(:single_node) do
+        generate_graph(
+          [
+            1,
+            [],
+          ]
+        )
+      end
 
-        it 'can be used to iterate over a single node' do
-          first = Node.new('first')
-          actual = first.each.next
-          expect(actual).to eq first
-        end
+      let(:simple_graph) do
+        generate_graph(
+          [
+            1,
+            [
+              2,
+              3,
+            ],
+          ]
+        )
+      end
 
-        it 'can be used to iterate over a simple tree' do
-          first = Node.new('first')
-          second = Node.new('second')
-          third = Node.new('third')
+      let(:complex_graph) do
+        generate_graph(
+          [
+            1,
+            [
+              2,
+              [
+                3,
+                [
+                  4,
+                ],
+              ],
+              [
+                5,
+                [
+                  6,
+                ],
+              ]
+            ]
+          ]
+        )
+      end
 
-          first.children << second
-          first.children << third
+      context 'when blocking' do
+        context 'without a block' do
+          it 'returns an enumerator' do
+            actual = single_node.each(blocking_until_visited: true)
+            expect(actual).to be_a_kind_of(Enumerator)
+          end
 
-          enum = first.each
+          it 'can be used to iterate over a single node' do
+            actual = single_node.each(blocking_until_visited: true).next
+            expect(actual).to eq single_node
+          end
 
-          [first, second, third].each do |expected|
-            actual = enum.next
-            expect(actual).to eq expected
+          it 'can be used to iterate over a simple tree' do
+            enum = simple_graph.each(blocking_until_visited: true)
+
+            3.times do |i|
+              actual = enum.next
+              expect(actual.arg).to eq i + 1
+            end
+
+            expect { enum.next }.to raise_error(StopIteration)
+          end
+
+          it 'can be used to iterate over a complex tree' do
+            enum = complex_graph.each(blocking_until_visited: true)
+
+            6.times do |i|
+              actual = enum.next
+              expect(actual.arg).to eq i + 1
+            end
+
+            expect { enum.next }.to raise_error(StopIteration)
           end
         end
 
-        it 'can be used to iterate over a complex tree' do
-          first = Node.new('first')
-          second = Node.new('second')
-          third = Node.new('third')
-          fourth = Node.new('fourth')
-          fifth = Node.new('fifth')
-          sixth = Node.new('sixth')
+        context 'with a block' do
+          it 'yields the right values to the block' do
+            root = complex_graph
 
-          first.children += [second, third, fifth]
-          third.children << fourth
-          fifth.children << sixth
+            expect {|b| root.each(blocking_until_visited: true, &b) }.to yield_control.exactly(6).times
 
-          enum = first.each
-
-          [first, second, third, fourth, fifth, sixth].each do |expected|
-            actual = enum.next
-            expect(actual).to eq expected
+            expect do |b|
+              root.each(blocking_until_visited: true) do |n|
+                b.to_proc.call(n.arg)
+              end
+            end.to yield_successive_args(*1..6)
           end
         end
       end
 
-      context 'with a block' do
-        it 'calls the block the right number of times' do
-          first = Node.new('first')
-          second = Node.new('second')
-          third = Node.new('third')
-          fourth = Node.new('fourth')
-          fifth = Node.new('fifth')
-          sixth = Node.new('sixth')
+      context 'when non-blocking' do
+        context 'without a block' do
+          it 'returns an enumerator' do
+            actual = single_node.each(blocking_until_visited: false)
+            expect(actual).to be_a_kind_of(Enumerator)
+          end
 
-          first.children += [second, third, fifth]
-          third.children << fourth
-          fifth.children << sixth
+          it 'can be used to iterate over a single node' do
+            actual = single_node.each(blocking_until_visited: false).next
+            expect(actual).to eq single_node
+          end
 
-          expect {|b| first.each(&b) }.to yield_control.exactly(6).times
+          it 'can be used to iterate over a simple tree' do
+            enum = simple_graph.each(blocking_until_visited: false)
+
+            3.times do |i|
+              actual = enum.next
+              expect(actual.arg).to eq i + 1
+            end
+
+            expect { enum.next }.to raise_error(StopIteration)
+          end
+
+          it 'can be used to iterate over a complex tree' do
+            enum = complex_graph.each(blocking_until_visited: false)
+
+            6.times do |i|
+              actual = enum.next
+              expect(actual.arg).to eq i + 1
+            end
+
+            expect { enum.next }.to raise_error(StopIteration)
+          end
+        end
+
+        #todo add examples for non-blocking exception
+
+        context 'with a block' do
+          it 'calls the block the right number of times' do
+            root = complex_graph
+
+            expect {|b| root.each(blocking_until_visited: false, &b) }.to yield_control.exactly(6).times
+            expect do |b|
+              root.each(blocking_until_visited: false) do |n|
+                b.to_proc.call(n.arg)
+              end
+            end.to yield_successive_args(*1..6)
+          end
         end
       end
     end
+  end
+
+  describe Visitor do
   end
 end

@@ -65,7 +65,7 @@ module SpecHelper
       node.status = Re::Graph::Node::Status::VISIT_SUCCEEDED
 
       root.last.each do |child|
-        node.children << generate_graph(child, depth + 1)
+        node << generate_graph(child, depth + 1)
       end
     end
 
