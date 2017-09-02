@@ -26,8 +26,8 @@ module Re
     end
 
     context 'when -d, --depth is passed in' do
-      it 'defaults to 0' do
-        expect(Options.new(%w'ag -l').max_depth).to eq 0
+      it 'defaults to 5' do
+        expect(Options.new(%w'ag -l').max_depth).to eq 5
       end
 
       it 'matches the number passed in to -d' do
