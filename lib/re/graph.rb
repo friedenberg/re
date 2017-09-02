@@ -269,7 +269,7 @@ module Re
         command = @utility.command(node.arg, @replacement_string)
 
         process, stderr = Spawn.by_line(command) do |line|
-          child = Node.new(line, node.depth + 1)
+          child = Node.new(line)
 
           if child.raw_arg.to_s.empty?
             next

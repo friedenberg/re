@@ -47,16 +47,13 @@ module SpecHelper
 
   def generate_graph(root, depth = 0)
     unless root.kind_of?(Array)
-      node = Re::Graph::Node.new(root, depth)
+      node = Re::Graph::Node.new(root)
       node.error = ""
       node.status = Re::Graph::Node::Status::VISIT_FAILED
       return node
     end
 
-    node = Re::Graph::Node.new(
-      root.first,
-      depth
-    )
+    node = Re::Graph::Node.new(root.first)
 
     if root.last.empty?
       node.status = Re::Graph::Node::Status::VISIT_FAILED
@@ -65,7 +62,9 @@ module SpecHelper
       node.status = Re::Graph::Node::Status::VISIT_SUCCEEDED
 
       root.last.each do |child|
-        node << generate_graph(child, depth + 1)
+        child = generate_graph(child, depth + 1)
+        node << child
+        child.depth = depth + 1
       end
     end
 
