@@ -2,22 +2,25 @@ require 'open3'
 require 'set'
 require 're/spawn'
 require 're/log'
+require 'pry'
 
 module Re
   module Graph
-    class Node < Struct.new(
-      :status,
-      :children,
-      :arg,
-      :error,
-      :raw_arg,
-      :depth,
-      :parent,
-    )
-
+    class Node
       include Enumerable
 
-      def initialize(arg, depth = 0)
+      attr_accessor(
+        :status,
+        :children,
+        :arg,
+        :error,
+        :raw_arg,
+        :depth,
+        :parent,
+        :priority
+      )
+
+      def initialize(arg)
         if arg.to_s.empty?
           raise ArgumentError.new("Empty arg for node")
         end
@@ -26,29 +29,28 @@ module Re
           arg = arg.chomp
         end
 
+        @status = Status::UNVISITED
+        @children = []
+        @arg = arg
+        @error = nil
+        @raw_arg = arg
+        @depth = 0
+        @parent = nil
+        @priority = 0
+
         @children_populated = false
         @child_mutex = Mutex.new
         @children_increased = ConditionVariable.new
 
         @status_mutex = Mutex.new
-
-        super(
-          Status::UNVISITED,
-          [],
-          arg,
-          nil,
-          arg,
-          depth,
-          nil,
-        )
       end
 
       def status
-        @status_mutex.synchronize { super }
+        @status_mutex.synchronize { @status }
       end
 
       def status=(new_status)
-        retval = @status_mutex.synchronize { super(new_status) }
+        retval = @status_mutex.synchronize { @status = new_status }
 
         if self.visited?
           @child_mutex.synchronize do
