@@ -45,6 +45,10 @@ module Re
         @status_mutex = Mutex.new
       end
 
+      def priority_compare(other)
+        @priority <=> other.priority
+      end
+
       def status
         @status_mutex.synchronize { @status }
       end
@@ -68,6 +72,11 @@ module Re
         child_node.depth = depth + 1
 
         @child_mutex.synchronize do
+          previous_child = children.last
+          previous_child_priority = 0
+          previous_child_priority += previous_child.priority unless previous_child.nil?
+          child_node.priority = priority + previous_child_priority
+
           children << child_node
           Re::Log.d("adding child (#{child_node.arg}) for \"#{self.arg}\"")
           @children_increased.broadcast
@@ -199,7 +208,7 @@ module Re
         @lobby_nodes = []
         @visited = Set.new
 
-        @visit_queue = Queue.new
+        @visit_queue = PriorityQueue.new {|a,b| b.priority_compare(a)}
         @worker_thread_count = options.worker_thread_count
       end
 

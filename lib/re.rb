@@ -3,6 +3,8 @@ require "re/version"
 require "re/options"
 require "re/graph"
 require "re/graph_putter"
+require "re/log"
+require "re/priority_queue"
 
 module Re
   class << self
