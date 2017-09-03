@@ -17,7 +17,7 @@ module Re
         :raw_arg,
         :depth,
         :parent,
-        :priority
+        :location,
       )
 
       def initialize(arg)
@@ -36,17 +36,19 @@ module Re
         @raw_arg = arg
         @depth = 0
         @parent = nil
-        @priority = 0
+        @location = []
 
         @children_populated = false
         @child_mutex = Mutex.new
         @children_increased = ConditionVariable.new
 
         @status_mutex = Mutex.new
+
+        Log.d("made a node: #{arg}")
       end
 
       def priority_compare(other)
-        @priority <=> other.priority
+        @location <=> other.location
       end
 
       def status
@@ -73,12 +75,16 @@ module Re
 
         @child_mutex.synchronize do
           previous_child = children.last
-          previous_child_priority = 0
-          previous_child_priority += previous_child.priority unless previous_child.nil?
-          child_node.priority = priority + previous_child_priority
+          new_location = @location.dup
+
+          if previous_child.nil?
+            new_location.push(0)
+          else
+            new_location.push(previous_child.location.last + 1)
+          end
+          child_node.location = new_location
 
           children << child_node
-          Re::Log.d("adding child (#{child_node.arg}) for \"#{self.arg}\"")
           @children_increased.broadcast
         end
 
@@ -168,7 +174,7 @@ module Re
       def visited?
         Status::TERMINAL_STATES.include?(self.status)
       end
-
+=begin
       def inspect(indent_level = 0)
         string = <<~EOF
           <
@@ -189,6 +195,7 @@ module Re
       rescue => e
         binding.pry
       end
+=end
 
       protected
 
@@ -218,6 +225,7 @@ module Re
             begin
               while node = @visit_queue.pop
                 Re::Log.d("successfully dequeued new visit node \"#{node.arg}\"")
+                Re::Log.d("priority: #{node.location}")
                 visit_node(node)
                 Re::Log.d("successfully visited node \"#{node.arg}\"")
               end
@@ -227,11 +235,14 @@ module Re
         end
 
         #todo listen for ctrl-c and end gracefully
+        location_idx = 0
         while line = @input_stream.gets
           node = Node.new(line)
+          node.location = [location_idx]
           Re::Log.d("adding lobby node\"#{node.arg}\"")
           @lobby_nodes << node
           @visit_queue << node
+          location_idx += 1
         end
 
         #this causes the calling thread to wait until traversal is complete
@@ -280,7 +291,7 @@ module Re
             next
           end
 
-          Re::Log.d("queueing new child node\"#{child.arg}\"")
+          Re::Log.d("queueing new child node\"#{child.arg}\" with location #{child.location}")
           node << child
           @visit_queue << child
         end

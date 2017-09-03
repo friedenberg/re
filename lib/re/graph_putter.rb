@@ -31,7 +31,7 @@ module Re
         node_string += node.error
       end
 
-      self.out.puts node_string
+      self.out.puts "#{node_string} #{node.location}"
     end
   end
 end
