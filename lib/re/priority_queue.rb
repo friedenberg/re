@@ -73,6 +73,8 @@ module Re
         end
       end
 
+      #puts max.location.inspect
+
       max
     end
 

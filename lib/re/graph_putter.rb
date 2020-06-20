@@ -15,6 +15,7 @@ module Re
 
   class TabGraphPutter < GraphPutter
     def print_node(node)
+      return
       node_string = ("\t" * node.depth) +
         if options.raw_output
           node.raw_arg

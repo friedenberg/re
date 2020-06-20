@@ -1,5 +1,6 @@
 require 'shellwords'
 require 're/utility'
+require 'optparse'
 
 module Re
   class Options

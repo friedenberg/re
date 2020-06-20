@@ -47,6 +47,18 @@ module Re
         Log.d("made a node: #{arg}")
       end
 
+      def ==(other)
+        (
+          other.status              == @status              and
+          other.children            == @children            and
+          other.arg                 == @arg                 and
+          other.error               == @error               and
+          other.raw_arg             == @raw_arg             and
+          other.depth               == @depth               and
+          other.location            == @location
+        )
+      end
+
       def priority_compare(other)
         @location <=> other.location
       end
@@ -89,6 +101,9 @@ module Re
         end
 
         self
+      rescue => e
+        puts e
+        exit(1)
       end
 
       alias_method :<<, :add_child

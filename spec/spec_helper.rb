@@ -1,6 +1,10 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 're'
 
+#oddly, requiring pry is necessary for the 'mktmpdir' method on Dir
+#but also, it's super helpful for debugging too
+require 'pry'
+
 module SpecHelper
   def with_graph_script(roots, &block)
     Dir.mktmpdir do |path|

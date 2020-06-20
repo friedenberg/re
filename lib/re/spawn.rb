@@ -30,6 +30,8 @@ module Re
       runner.join
 
       return [$?, stderr.read]
+    rescue => e
+      return [1, e.message]
     ensure
       stdout.close unless stdout.nil?
       stderr.close unless stderr.nil?
